@@ -7,8 +7,8 @@ from pathlib import Path
 # ---------------------------------------------------------------- Chemins
 ROOT = Path(__file__).resolve().parent.parent
 IMAGES_DIR = ROOT / "Images"
-CIRCUIT_IMAGE = IMAGES_DIR / "ClaudeCircuit.png"       # image jolie (affichage)
-CIRCUIT_MASK = IMAGES_DIR / "ClaudeCircuit_mask.png"   # blanc = route, noir = dehors
+CIRCUIT_IMAGE = IMAGES_DIR / "Circuit.png"       # image jolie (affichage)
+CIRCUIT_MASK = IMAGES_DIR / "Circuit_mask.png"   # blanc = route, noir = dehors
 CAR_IMAGE = IMAGES_DIR / "Voiture.png"
 
 # ---------------------------------------------------------------- Circuit
@@ -17,6 +17,8 @@ START_POSITION = (560.0, 115.0)   # juste avant la ligne d'arrivée
 START_ANGLE = 0.0                 # en degrés
 FINISH_LINE_X = 605               # la ligne d'arrivée est verticale à x = 605 ...
 FINISH_LINE_Y_RANGE = (75, 155)   # ... entre ces deux y
+MIN_LAP_DISTANCE = 1500           # px roulés avant qu'un passage de ligne compte comme un tour
+                                  # (le départ est juste avant la ligne : 1er passage ignoré)
 
 # ---------------------------------------------------------------- Voiture
 CAR_LENGTH = 30                   # px (pour l'affichage)

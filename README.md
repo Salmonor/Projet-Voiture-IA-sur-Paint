@@ -15,8 +15,8 @@ Voitures IA/
 ├── main.ipynb            # lance tout, étape par étape, avec des tests
 ├── requirements.txt
 ├── Images/
-│   ├── ClaudeCircuit.png       # circuit (affichage)
-│   ├── ClaudeCircuit_mask.png  # blanc = route, noir = dehors (collisions)
+│   ├── Circuit.png             # circuit (affichage)
+│   ├── Circuit_mask.png        # blanc = route, noir = dehors (collisions)
 │   ├── Circuit Paint.png       # circuit d'origine
 │   └── Voiture.png
 └── src/

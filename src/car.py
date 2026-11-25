@@ -19,7 +19,16 @@ class Car:
 
     def __init__(self, x=config.START_POSITION[0], y=config.START_POSITION[1],
                  angle=config.START_ANGLE):
-        raise NotImplementedError
+        self.x = float(x)
+        self.y = float(y)
+        self.angle = float(angle)
+        self.speed = 0.0
+        self.alive = True
+        self.distance = 0.0
+        self.laps = 0
+        self.steps = 0
+        # Distance au moment du dernier tour validé (voir update, point 5)
+        self._distance_at_last_lap = 0.0
 
     # ------------------------------------------------------------ ÉTAPE 2 : physique
     def update(self, steering: float, throttle: float, circuit) -> None:
@@ -38,7 +47,49 @@ class Car:
           5. Mettre à jour distance, steps, laps (circuit.crossed_finish_line).
           6. Si on n'est plus sur la route -> alive = False.
         """
-        raise NotImplementedError
+        # 1. Une voiture crashée ne bouge plus.
+        if not self.alive:
+            return
+
+        # Le réseau sort déjà des valeurs dans [-1, 1] (tanh), mais on protège quand même
+        # la physique contre des commandes absurdes (ex : bug, clavier...).
+        steering = float(np.clip(steering, -1.0, 1.0))
+        throttle = float(np.clip(throttle, -1.0, 1.0))
+
+        # 2. Direction. On ne tourne que si on roule : une voiture à l'arrêt qui pivote
+        #    sur place, c'est irréaliste... et l'algo génétique adorerait tricher comme ça !
+        if self.speed > 0:
+            self.angle = (self.angle + steering * config.TURN_SPEED) % 360
+
+        # 3. Vitesse : accélérateur/frein, puis frottement qui ralentit toujours un peu.
+        #    np.clip borne la vitesse : pas de marche arrière, pas d'excès de vitesse.
+        self.speed += throttle * config.ACCELERATION
+        self.speed -= config.FRICTION
+        self.speed = float(np.clip(self.speed, 0.0, config.MAX_SPEED))
+
+        # 4. Déplacement. cos/sin attendent des RADIANS.
+        #    Repère image : y vers le BAS, donc un angle positif fait tourner vers la droite
+        #    (sens horaire à l'écran) -> cohérent avec steering = +1 = droite.
+        old_pos = (self.x, self.y)
+        rad = np.radians(self.angle)
+        self.x += np.cos(rad) * self.speed
+        self.y += np.sin(rad) * self.speed
+
+        # 5. Statistiques.
+        self.distance += self.speed
+        self.steps += 1
+        # Piège : la voiture démarre JUSTE AVANT la ligne d'arrivée, donc elle la franchit
+        # au bout de quelques pas. Sans précaution, ça compterait comme un tour !
+        # On n'accepte un tour que si on a roulé assez depuis le dernier.
+        if circuit.crossed_finish_line(old_pos, (self.x, self.y)):
+            if self.distance - self._distance_at_last_lap >= config.MIN_LAP_DISTANCE:
+                self.laps += 1
+                self._distance_at_last_lap = self.distance
+
+        # 6. Sortie de route = crash. (On teste seulement le centre de la voiture :
+        #    simple, et suffisant pour ce projet.)
+        if not circuit.is_on_track(self.x, self.y):
+            self.alive = False
 
     # ------------------------------------------------------------ ÉTAPE 3 : capteurs
     def cast_ray(self, circuit, relative_angle: float) -> float:
